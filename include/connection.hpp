@@ -1,6 +1,5 @@
 #pragma once
 
-#include "core.hpp"
 #include <serverpp/core.hpp>
 #include <functional>
 #include <memory>
