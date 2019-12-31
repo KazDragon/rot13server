@@ -97,6 +97,7 @@ struct connection::impl
     // ======================================================================
     void raw_write(telnetpp::bytes data)
     {
+        // Send unescaped data directly to the socket.
         this->socket_.write(data);
     }
 
@@ -122,6 +123,30 @@ struct connection::impl
         std::function<void (serverpp::bytes)> const &data_continuation,
         std::function<void ()> const &read_complete_continuation)
     {
+        // Requests that we read some data from the socket, passing a
+        // continuation that is called when data is received.
+
+        // Upon reception, this is filtered through the Telnet Session.
+        // This takes two continuations:
+        //    o The first is for application layer non-Telnet data.
+        //      This continuation passes both the data and also another
+        //      continuation that can be used for the application to
+        //      respond to the data, although this is unused in this
+        //      example.
+        //
+        //    o The second is the Telnet "response" continuation.
+        //      Since the Telnet session object doesn't know or care
+        //      where the data is coming from or going to, this is
+        //      the function that it uses to respond to incoming
+        //      messages (e.g. if it receives an option negotiation,
+        //      this is the function it calls to send the response).
+        //
+        // Finally, the completion continuation is called every time.
+        // This is because it could be the case that all the data is
+        // consumed as Telnet messages, and more data needs to be
+        // requested.  Or the socket could have disconnected with no
+        // data received.  Either way, the called of async_read must
+        // know to take action at this point in time.
         socket_.async_read(
             [=](serverpp::bytes data)
             {
