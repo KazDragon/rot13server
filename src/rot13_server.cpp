@@ -27,6 +27,10 @@ serverpp::byte_storage rot13_encode(serverpp::bytes data)
         {
             return serverpp::byte('a' + (((datum - 'a') + 13) % 26));
         }
+	else if (datum == '\0')
+	{
+	    return serverpp::byte('\n');
+	}
         else
         {
             return datum;
