@@ -6,10 +6,8 @@
 #include <boost/range/algorithm_ext/erase.hpp>
 #include <algorithm>
 #include <functional>
-#include <future>
 #include <iostream>
 #include <memory>
-#include <thread>
 #include <utility>
 #include <vector>
 
@@ -143,18 +141,6 @@ private:
             });
     }
 
-    void close_all_connections()
-    {
-        std::unique_lock<std::mutex> lock(connections_mutex_);
-
-        boost::for_each(
-            connections_,
-            [](auto &connection)
-            {
-                connection->close();
-            });
-    }
-
     boost::asio::io_context io_context_;
     boost::asio::executor_work_guard<
         boost::asio::io_context::executor_type> work_;
@@ -169,18 +155,6 @@ private:
 
 int main()
 {
-    auto server = std::unique_ptr<rot13::server>(new rot13::server);
-
-    std::vector<std::thread> threads;
-    for (int i = 0; i < std::thread::hardware_concurrency(); ++i)
-    {
-        threads.emplace_back([&server]{server->run();});
-    }
-
-    for (auto &thread : threads)
-    {
-        thread.join();
-    }
-
-    server.reset();
+    rot13::server server;
+    server.run();
 }
